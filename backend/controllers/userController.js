@@ -1,39 +1,92 @@
 const asyncHandler = require('express-async-handler')
 const User = require('../models/userModel')
+const jwt = require("jsonwebtoken")
+const bcrypt = require("bcryptjs")
 
-const getTareas = asyncHandler( async (req, res) => {
+const getMisDatos = asyncHandler( async (req, res) => {
 
-    const users = await User.find()
-    res.status(200).json(users)
+    
+    res.status(200).json(req.user)
+})
+
+const loginUser = asyncHandler( async (req, res) => {
+    //desestructuramos el body del request
+    const {email, password} = req.body
+    //verificamos que recibamos la informacion del modelo user necesita
+    if(!email || !password){
+        res.status(400)
+        throw new Error('Favor de verificar que esten todos los campos')
+    }
+    //verificamos que el usuario exista
+    const user = await User.findOne({email})
+
+    //comparamos el hash del password y el usuario
+    if (user && (await bcrypt.compare(password,user.password))){
+        res.status(200).json({
+            _id: user.id,
+            name: user.name,
+            email:user.email,
+            token : generateToken(user.id)
+        })
+    }else{
+        res.status(400)
+        throw new Error('Credenciales Incorrectos')
+    }
+
+
+    // const users = await User.find()
+    // res.status(200).json(users)
+    res.status(200).json({mensaje:"login"})
 })
 
 const registerUser = asyncHandler( async (req,res) => {
+    //desestructuramos el body del request
+    const {name,email,password} = req.body
+//verificamos que recibamos la informacion del modelo user necesita
+    if(!name || !email || !password){
+        res.status(400)
+        throw new Error('Favor de verificar que esten todos los campos')
+    }
+    //verificamos que no exista ese usuario en la coleccion
+    const userExiste = await User.findOne({email})
 
-    // if(!req.body.texto){
-    //     // res.status(400).json({mensaje:'Favor ingresar la descripcion de la tarea'})
-    //     res.status(400)
-    //     throw new Error('Favor de teclear una informacion para la tarea')
-    // }
-    // const tarea = await Tarea.create({
-    //     texto : req.body.texto
-    // })
+    if(userExiste){
+        res.status(400)
+        throw new Error('Ese email ya fue registrado')
+    }
+    //Hash al password
 
-    // console.log(req.body);
-    res.status(201).json({mensaje : `se registra el User`})
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(password, salt)
+
+    const user = await User.create({
+        name,
+        email,
+        password : hashedPassword
+    })
+
+    if(user){
+        res.status(201).json({
+            _id : user.id,
+            name : user.name,
+            email : user.email,
+            
+        })
+    }else{
+        res.status(400)
+        throw new Error('no se registro user')
+    }
 
 })
 
-const updateTareas = asyncHandler( async (req,res) => {
-    res.status(200).json({mensaje:`Mofidicar las tarea ${req.params.id}`})
-})
 
-const deleteTareas = asyncHandler ( async (req,res) => {
-    res.status(200).json({mensaje:`Borrar las tareas ${req.params.id}`})
-})
+const generateToken = (id)=> {
+    return jwt.sign({id},process.env.JWT_SECRET)
+        expiresIn: '30d'
+}
 
 module.exports = {
-    getTareas,
+    loginUser,
     registerUser,
-    updateTareas,
-    deleteTareas,
+    getMisDatos
 }
