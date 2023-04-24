@@ -12,6 +12,8 @@ connectDB()
 
 const app = express()
 
+app.use(cors())
+
 app.use(function (req, res, next) {
     // 👇️ specify CORS headers to send 👇️
     res.header('Access-Control-Allow-Origin', '*');
