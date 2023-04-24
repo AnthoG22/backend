@@ -14,21 +14,8 @@ const app = express()
 
 app.use(cors())
 
-app.use(function (req, res, next) {
-    // 👇️ specify CORS headers to send 👇️
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header(
-      'Access-Control-Allow-Methods',
-      'POST, PUT, PATCH, GET, DELETE, OPTIONS',
-    );
-    res.header(
-      'Access-Control-Allow-Headers',
-      'Origin, X-Api-Key, X-Requested-With, Content-Type, Accept, Authorization',
-    );
-    next();
-  });
 
-app.options('/*', cors());
+app.options('*', cors());
 
 
 app.use(express.json())
