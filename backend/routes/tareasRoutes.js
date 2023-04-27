@@ -8,7 +8,7 @@ router.route('/').get(protect,getTareas).post(protect,setTareas)
 // router.get('/',getTareas)
 // router.post('/',setTareas)
 
-router.route('/:id').put(protect,updateTareas).delete(deleteTareas)
+router.route('/:id').put(protect,updateTareas).delete(protect,deleteTareas)
 
 // router.put('/:id',updateTareas)
 // router.delete('/:id',deleteTareas)
